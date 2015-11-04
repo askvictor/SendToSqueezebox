@@ -1,13 +1,16 @@
 package com.victorrajewski.sendtosqueezebox;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
@@ -33,6 +36,21 @@ public class SendToActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
+        adapter.add("whatever data1");
+        adapter.add("whatever data2");
+        adapter.add("whatever data3");
+        builder.setTitle("Which Squeezebox?");
+        builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int item) {
+
+                    }
+                });
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
         Intent intent = getIntent();
         String action = intent.getAction();
         Bundle extras = intent.getExtras();
@@ -45,10 +63,10 @@ public class SendToActivity extends AppCompatActivity {
         playersTask.execute();
         try {
             players = playersTask.get();
-            players.get("qwe");
         }catch (Exception e) {
             e.printStackTrace();
         }
+
         final String playerMAC = sharedPref.getString("player_mac", "");
         SendToSqueezeboxTask task = new SendToSqueezeboxTask();
         Uri uri = Uri.parse(url);
@@ -57,7 +75,7 @@ public class SendToActivity extends AppCompatActivity {
 
         Toast toast = Toast.makeText(context, ytID, duration);
         toast.show();
-        finish();
+        //finish();
     }
     public static String extractYTId(String ytUrl) {
         String vId = null;
