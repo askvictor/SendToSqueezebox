@@ -31,7 +31,6 @@ import java.util.regex.Pattern;
 public class SendToActivity extends AppCompatActivity {
 
     List<String[]> players;
-    Integer chosen_player_index = 0;
     String url;
     SharedPreferences sharedPref;
     @Override
@@ -43,7 +42,6 @@ public class SendToActivity extends AppCompatActivity {
         String action = intent.getAction();
         Bundle extras = intent.getExtras();
         url = extras.getString(Intent.EXTRA_TEXT);
-        final Context context = getApplicationContext();
 
         GetPlayersTask playersTask = new GetPlayersTask();
         playersTask.execute();
@@ -54,12 +52,12 @@ public class SendToActivity extends AppCompatActivity {
         }
 
         if(players.size() == 0) {
-            Toast toast = Toast.makeText(context, "No Players Found!", Toast.LENGTH_LONG);
+            Toast toast = Toast.makeText(getApplicationContext(), "No Players Found!", Toast.LENGTH_LONG);
             toast.show();
             finish();
             return;
         } else if(players.size() == 1) {
-            sendToSqueezebox();
+            sendToSqueezebox(0);
         } else {
             AlertDialog.Builder builder = new AlertDialog.Builder(SendToActivity.this);
             ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
@@ -69,8 +67,7 @@ public class SendToActivity extends AppCompatActivity {
             builder.setTitle("Which Squeezebox?");
             builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int item) {
-                    chosen_player_index = item;
-                    sendToSqueezebox();
+                    sendToSqueezebox(item);
                 }
             });
             AlertDialog dialog = builder.create();
@@ -80,7 +77,7 @@ public class SendToActivity extends AppCompatActivity {
         //finish();
     }
 
-    public void sendToSqueezebox() {
+    public void sendToSqueezebox(int chosen_player_index) {
         String[] player = players.get(chosen_player_index);
         SendToSqueezeboxTask task = new SendToSqueezeboxTask();
         Uri uri = Uri.parse(url);
@@ -171,6 +168,7 @@ public class SendToActivity extends AppCompatActivity {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
+            finish();
             return null;
         }
     }
