@@ -30,50 +30,65 @@ import java.util.regex.Pattern;
 
 public class SendToActivity extends AppCompatActivity {
 
+    List<String[]> players;
+    String[] chosen_player;
     SharedPreferences sharedPref;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
-        adapter.add("whatever data1");
-        adapter.add("whatever data2");
-        adapter.add("whatever data3");
-        builder.setTitle("Which Squeezebox?");
-        builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int item) {
-
-                    }
-                });
-        AlertDialog dialog = builder.create();
-        dialog.show();
 
         Intent intent = getIntent();
         String action = intent.getAction();
         Bundle extras = intent.getExtras();
         String url = extras.getString(Intent.EXTRA_TEXT);
         Context context = getApplicationContext();
-        int duration = Toast.LENGTH_SHORT;
 
         GetPlayersTask playersTask = new GetPlayersTask();
-        Map players;
         playersTask.execute();
         try {
             players = playersTask.get();
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
-        final String playerMAC = sharedPref.getString("player_mac", "");
+        if(players.size() == 0) {
+            Toast toast = Toast.makeText(context, "No Players Found!", Toast.LENGTH_LONG);
+            toast.show();
+            finish();
+            return;
+        } else if(players.size() == 1) {
+            chosen_player = players.get(0);
+        } else {
+            AlertDialog.Builder builder = new AlertDialog.Builder(SendToActivity.this);
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
+            for(String[] player: players){
+                adapter.add(player[0]);
+            }
+            builder.setTitle("Which Squeezebox?");
+            builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int item) {
+                    chosen_player = players.get(item);
+                }
+            });
+            AlertDialog dialog = builder.create();
+            dialog.show();
+
+            if(chosen_player == null){
+                Toast toast = Toast.makeText(context, "No Player Selected!", Toast.LENGTH_LONG);
+                toast.show();
+                finish();
+                return;
+            }
+        }
+
         SendToSqueezeboxTask task = new SendToSqueezeboxTask();
         Uri uri = Uri.parse(url);
         String ytID = extractYTId(url);
-        task.execute(playerMAC, "youtube://" + ytID);
+        task.execute(chosen_player[1], "youtube://" + ytID);
 
-        Toast toast = Toast.makeText(context, ytID, duration);
+        Toast toast = Toast.makeText(context, "Sent to " + chosen_player[0], Toast.LENGTH_LONG);
         toast.show();
         //finish();
     }
@@ -88,9 +103,10 @@ public class SendToActivity extends AppCompatActivity {
         }
         return vId;
     }
-    private class GetPlayersTask extends AsyncTask<Void, Void, Map<String, String>> {
-        protected Map<String, String> doInBackground(Void... args) {
-            Map<String, String> players = new HashMap<String,String>();
+    private class GetPlayersTask extends AsyncTask<Void, Void, List<String[]>> {
+        protected List<String[]> doInBackground(Void... args) {
+            //Map<String, String> players = new HashMap<String,String>();
+            List<String[]> players = new ArrayList<String[]>();
             try {
                 final String address = sharedPref.getString("server_address", "");
                 final String port = sharedPref.getString("server_port", "");
@@ -107,8 +123,6 @@ public class SendToActivity extends AppCompatActivity {
                 } else {
                     //throw "Error contacting server";
                 }
-                List<String> playerMACs = new ArrayList<String>();
-                List<String> playerNames = new ArrayList<String>();
                 for(int i=0; i<playerCount; i++) {
                     String playerMAC = "";
                     String playerName = "";
@@ -123,7 +137,8 @@ public class SendToActivity extends AppCompatActivity {
                     if(response.substring(0,13).equals("player name " + i)) { //TODO - handle 2-digits?
                         playerName = URLDecoder.decode(response.substring(14), "UTF-8");
                     } // TODO - check for empty response
-                    players.put(playerName, playerMAC);
+
+                    players.add(new String[]{playerName, playerMAC});
                 }
 
                 output.close();
