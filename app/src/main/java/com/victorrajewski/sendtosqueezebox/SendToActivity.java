@@ -31,19 +31,19 @@ import java.util.regex.Pattern;
 public class SendToActivity extends AppCompatActivity {
 
     List<String[]> players;
-    String[] chosen_player;
+    Integer chosen_player_index = 0;
+    String url;
     SharedPreferences sharedPref;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-
         Intent intent = getIntent();
         String action = intent.getAction();
         Bundle extras = intent.getExtras();
-        String url = extras.getString(Intent.EXTRA_TEXT);
-        Context context = getApplicationContext();
+        url = extras.getString(Intent.EXTRA_TEXT);
+        final Context context = getApplicationContext();
 
         GetPlayersTask playersTask = new GetPlayersTask();
         playersTask.execute();
@@ -59,7 +59,7 @@ public class SendToActivity extends AppCompatActivity {
             finish();
             return;
         } else if(players.size() == 1) {
-            chosen_player = players.get(0);
+            sendToSqueezebox();
         } else {
             AlertDialog.Builder builder = new AlertDialog.Builder(SendToActivity.this);
             ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
@@ -69,29 +69,29 @@ public class SendToActivity extends AppCompatActivity {
             builder.setTitle("Which Squeezebox?");
             builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int item) {
-                    chosen_player = players.get(item);
+                    chosen_player_index = item;
+                    sendToSqueezebox();
                 }
             });
             AlertDialog dialog = builder.create();
             dialog.show();
-
-            if(chosen_player == null){
-                Toast toast = Toast.makeText(context, "No Player Selected!", Toast.LENGTH_LONG);
-                toast.show();
-                finish();
-                return;
-            }
         }
 
+        //finish();
+    }
+
+    public void sendToSqueezebox() {
+        String[] player = players.get(chosen_player_index);
         SendToSqueezeboxTask task = new SendToSqueezeboxTask();
         Uri uri = Uri.parse(url);
         String ytID = extractYTId(url);
-        task.execute(chosen_player[1], "youtube://" + ytID);
+        task.execute(player[1], "youtube://" + ytID);
 
-        Toast toast = Toast.makeText(context, "Sent to " + chosen_player[0], Toast.LENGTH_LONG);
+        Toast toast = Toast.makeText(getApplicationContext(), "Sent  to " + player[0], Toast.LENGTH_LONG);
         toast.show();
-        //finish();
+
     }
+
     public static String extractYTId(String ytUrl) {
         String vId = null;
         Pattern pattern = Pattern.compile(
