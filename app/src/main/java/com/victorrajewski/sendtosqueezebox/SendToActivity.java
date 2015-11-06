@@ -1,6 +1,5 @@
 package com.victorrajewski.sendtosqueezebox;
 
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -21,16 +20,22 @@ import java.net.Socket;
 import java.net.URLDecoder;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SendToActivity extends AppCompatActivity {
 
-    List<String[]> players;
+    class Player {
+        public String name;
+        public String MACaddress;
+
+        public Player(String name, String MACaddress) {
+            this.name = name;
+            this.MACaddress = MACaddress;
+        }
+    }
+    List<Player> players;
     String url;
     SharedPreferences sharedPref;
     @Override
@@ -40,8 +45,11 @@ public class SendToActivity extends AppCompatActivity {
         sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         Intent intent = getIntent();
         String action = intent.getAction();
-        Bundle extras = intent.getExtras();
-        url = extras.getString(Intent.EXTRA_TEXT);
+        if(action.equals("android.intent.action.SEND")) {
+            url = intent.getExtras().getString(Intent.EXTRA_TEXT);
+        } else if(action.equals("android.intent.action.VIEW")){
+            url = intent.getDataString();
+        }
 
         GetPlayersTask playersTask = new GetPlayersTask();
         playersTask.execute();
@@ -61,8 +69,8 @@ public class SendToActivity extends AppCompatActivity {
         } else {
             AlertDialog.Builder builder = new AlertDialog.Builder(SendToActivity.this);
             ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
-            for(String[] player: players){
-                adapter.add(player[0]);
+            for(Player player: players){
+                adapter.add(player.name);
             }
             builder.setTitle("Which Squeezebox?");
             builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
@@ -78,32 +86,30 @@ public class SendToActivity extends AppCompatActivity {
     }
 
     public void sendToSqueezebox(int chosen_player_index) {
-        String[] player = players.get(chosen_player_index);
+        Player player = players.get(chosen_player_index);
         SendToSqueezeboxTask task = new SendToSqueezeboxTask();
-        Uri uri = Uri.parse(url);
-        String ytID = extractYTId(url);
-        task.execute(player[1], "youtube://" + ytID);
+        task.execute(player.MACaddress, convertURL(url));
 
-        Toast toast = Toast.makeText(getApplicationContext(), "Sent  to " + player[0], Toast.LENGTH_LONG);
+        Toast toast = Toast.makeText(getApplicationContext(), "Sent  to " + player.name, Toast.LENGTH_LONG);
         toast.show();
 
     }
 
-    public static String extractYTId(String ytUrl) {
+    public static String convertURL(String url) {
         String vId = null;
         Pattern pattern = Pattern.compile(
                 "^https?://.*(?:youtu.be/|v/|u/\\w/|embed/|watch?v=)([^#&?]*).*$",
                 Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(ytUrl);
+        Matcher matcher = pattern.matcher(url);
         if (matcher.matches()){
-            vId = matcher.group(1);
+            return "youtube://" + matcher.group(1);
+        } else {
+            return url;
         }
-        return vId;
     }
-    private class GetPlayersTask extends AsyncTask<Void, Void, List<String[]>> {
-        protected List<String[]> doInBackground(Void... args) {
-            //Map<String, String> players = new HashMap<String,String>();
-            List<String[]> players = new ArrayList<String[]>();
+    private class GetPlayersTask extends AsyncTask<Void, Void, List<Player>> {
+        protected List<Player> doInBackground(Void... args) {
+            List<Player> players = new ArrayList<Player>();
             try {
                 final String address = sharedPref.getString("server_address", "");
                 final String port = sharedPref.getString("server_port", "");
@@ -134,8 +140,7 @@ public class SendToActivity extends AppCompatActivity {
                     if(response.substring(0,13).equals("player name " + i)) { //TODO - handle 2-digits?
                         playerName = URLDecoder.decode(response.substring(14), "UTF-8");
                     } // TODO - check for empty response
-
-                    players.add(new String[]{playerName, playerMAC});
+                    players.add(new Player (playerName, playerMAC));
                 }
 
                 output.close();
