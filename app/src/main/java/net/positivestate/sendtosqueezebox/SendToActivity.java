@@ -1,9 +1,8 @@
-package com.victorrajewski.sendtosqueezebox;
+package net.positivestate.sendtosqueezebox;
 
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;

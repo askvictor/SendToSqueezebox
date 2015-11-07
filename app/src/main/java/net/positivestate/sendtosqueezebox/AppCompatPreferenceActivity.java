@@ -1,4 +1,4 @@
-package com.victorrajewski.sendtosqueezebox;
+package net.positivestate.sendtosqueezebox;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
