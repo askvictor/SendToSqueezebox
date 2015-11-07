@@ -1,6 +1,7 @@
 <resources>
-    <string name="app_name">SendToSqueezebox</string>
-    
+    <string name="settings_activity_name">Send to Squeezebox Settings</string>
+    <string name="share_activity_name">Squeezebox</string>
+
     <string name="pref_title_server_address">Server Address</string>
     <string name="pref_default_server_address">192.168.1.23</string>
     <string name="pref_title_server_port">Server CLI Port (usually 9090)</string>
