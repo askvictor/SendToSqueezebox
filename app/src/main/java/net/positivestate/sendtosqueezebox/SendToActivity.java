@@ -97,7 +97,7 @@ public class SendToActivity extends AppCompatActivity {
     public static String convertURL(String url) {
         String vId = null;
         Pattern pattern = Pattern.compile(
-                "^https?://.*(?:youtu.be/|v/|u/\\w/|embed/|watch?v=)([^#&?]*).*$",
+                "https?://(?:[0-9A-Z-]+\\.)?(?:youtu\\.be/|youtube\\.com\\S*[^\\w\\-\\s])([\\w\\-]{11})(?=[^\\w\\-]|$)(?![?=&+%\\w]*(?:['\"][^<>]*>|</a>))[?=&+%\\w]*",
                 Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(url);
         if (matcher.matches()){
