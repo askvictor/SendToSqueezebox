@@ -95,13 +95,20 @@ public class SendToActivity extends AppCompatActivity {
     }
 
     public static String convertURL(String url) {
-        String vId = null;
-        Pattern pattern = Pattern.compile(
+        Pattern googlemusic_pattern = Pattern.compile(
+                "https://play.google.com/music/m/([^\\?]+)\\??(.*)",  //TODO - handle radio URLS (/r/m)
+                Pattern.CASE_INSENSITIVE);
+        Matcher googlemusic_matcher = googlemusic_pattern.matcher(url);
+
+        Pattern youtube_pattern = Pattern.compile(
                 "https?://(?:[0-9A-Z-]+\\.)?(?:youtu\\.be/|youtube\\.com\\S*[^\\w\\-\\s])([\\w\\-]{11})(?=[^\\w\\-]|$)(?![?=&+%\\w]*(?:['\"][^<>]*>|</a>))[?=&+%\\w]*",
                 Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(url);
-        if (matcher.matches()){
-            return "youtube://" + matcher.group(1);
+        Matcher youtube_matcher = youtube_pattern.matcher(url);
+
+        if (googlemusic_matcher.matches()) {
+            return "googlemusic:track:" + googlemusic_matcher.group(1);
+        } else if (youtube_matcher.matches()){
+            return "youtube://" + youtube_matcher.group(1);
         } else {
             return url;
         }

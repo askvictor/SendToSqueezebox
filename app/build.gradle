@@ -4,11 +4,11 @@ android {
     compileSdkVersion 23
     buildToolsVersion "23.0.0"
     defaultConfig {
-        applicationId 'net.positivestate.sendtosqueezebox'
+        applicationId 'net.positivestate.sendtosqueezebox_paid'
         minSdkVersion 9
         targetSdkVersion 23
-        versionCode 1
-        versionName "1.0"
+        versionCode 3
+        versionName "1.2"
     }
     buildTypes {
         release {
