@@ -109,8 +109,12 @@ public class SendToActivity extends AppCompatActivity {
             switch (googlemusic_matcher.group(2)) {
                 case "A":  // artist
                     return "googlemusic:artist:" + googlemusic_matcher.group(3);
-                case "B":  // radio
-                    return "googlemusic:station:" + googlemusic_matcher.group(3);
+                case "B":  // radio or album
+                    if (googlemusic_matcher.group(1) != null) { //radio
+                        return "googlemusic:station:" + googlemusic_matcher.group(3);
+                    } else {
+                        return "googlemusic:album:" + googlemusic_matcher.group(3);
+                    }
                 case "T":  // track
                     return "googlemusic:track:" + googlemusic_matcher.group(3);
                 case "R":  // album
