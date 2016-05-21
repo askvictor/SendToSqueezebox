@@ -96,7 +96,7 @@ public class SendToActivity extends AppCompatActivity {
 
     public static String convertURL(String url) {
         Pattern googlemusic_pattern = Pattern.compile(
-                "https://play.google.com/music/m/([^\\?]+)\\??(.*)",  //TODO - handle radio URLS (/r/m)
+                "https://play.google.com/music(/r)?/m/(A|B|T|R)([^\\?]+)\\??(.*)",
                 Pattern.CASE_INSENSITIVE);
         Matcher googlemusic_matcher = googlemusic_pattern.matcher(url);
 
@@ -106,13 +106,22 @@ public class SendToActivity extends AppCompatActivity {
         Matcher youtube_matcher = youtube_pattern.matcher(url);
 
         if (googlemusic_matcher.matches()) {
-            return "googlemusic:track:" + googlemusic_matcher.group(1);
-        } else if (youtube_matcher.matches()){
+            switch (googlemusic_matcher.group(2)) {
+                case "A":  // artist
+                    return "googlemusic:artist:" + googlemusic_matcher.group(3);
+                case "B":  // radio
+                    return "googlemusic:station:" + googlemusic_matcher.group(3);
+                case "T":  // track
+                    return "googlemusic:track:" + googlemusic_matcher.group(3);
+                case "R":  // album
+                    return "googlemusic:album:" + googlemusic_matcher.group(3);
+            }
+        } else if (youtube_matcher.matches()) {
             return "youtube://" + youtube_matcher.group(1);
-        } else {
-            return url;
         }
+        return url;
     }
+
     private class GetPlayersTask extends AsyncTask<Void, Void, List<Player>> {
         protected List<Player> doInBackground(Void... args) {
             List<Player> players = new ArrayList<Player>();
