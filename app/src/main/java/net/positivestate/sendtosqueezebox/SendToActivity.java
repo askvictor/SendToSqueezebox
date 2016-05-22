@@ -108,17 +108,17 @@ public class SendToActivity extends AppCompatActivity {
         if (googlemusic_matcher.matches()) {
             switch (googlemusic_matcher.group(2)) {
                 case "A":  // artist
-                    return "googlemusic:artist:" + googlemusic_matcher.group(3);
+                    return "googlemusic:artist:A" + googlemusic_matcher.group(3);
                 case "B":  // radio or album
                     if (googlemusic_matcher.group(1) != null) { //radio
-                        return "googlemusic:station:" + googlemusic_matcher.group(3);
+                        return "googlemusic:station:B" + googlemusic_matcher.group(3);
                     } else {
-                        return "googlemusic:album:" + googlemusic_matcher.group(3);
+                        return "googlemusic:album:B" + googlemusic_matcher.group(3);
                     }
                 case "T":  // track
-                    return "googlemusic:track:" + googlemusic_matcher.group(3);
+                    return "googlemusic:track:T" + googlemusic_matcher.group(3);
                 case "R":  // album
-                    return "googlemusic:album:" + googlemusic_matcher.group(3);
+                    return "googlemusic:album:R" + googlemusic_matcher.group(3);
             }
         } else if (youtube_matcher.matches()) {
             return "youtube://" + youtube_matcher.group(1);
