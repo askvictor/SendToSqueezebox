@@ -7,8 +7,8 @@ android {
         applicationId 'net.positivestate.sendtosqueezebox_paid'
         minSdkVersion 9
         targetSdkVersion 23
-        versionCode 3
-        versionName "1.2"
+        versionCode 4
+        versionName "1.4"
     }
     buildTypes {
         release {
