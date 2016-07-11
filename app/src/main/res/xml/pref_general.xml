@@ -19,9 +19,11 @@
         android:capitalize="none"
         android:singleLine="true"
         android:maxLines="1" />
-            <CheckBoxPreference
-            android:key="default_play_radio"
-            android:summary="If checked, will attempt to start radio station on supported protocols (YouTube, Google Music)."
-            android:title="Start Radio by Default"
-            android:defaultValue="false" />
+
+    <!-- TODO - make into a ListPreference including an 'always ask' option -->
+    <CheckBoxPreference
+        android:key="default_play_radio"
+        android:summary="If checked, will attempt to start radio station on supported protocols (YouTube, Google Music)."
+        android:title="Start Radio by Default"
+        android:defaultValue="false" />
 </PreferenceScreen>
