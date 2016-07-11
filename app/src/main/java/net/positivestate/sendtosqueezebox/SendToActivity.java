@@ -84,6 +84,26 @@ public class SendToActivity extends AppCompatActivity {
         //finish();
     }
 
+    public void dialogChoosePlayType() {
+        AlertDialog.Builder play_builder = new AlertDialog.Builder(SendToActivity.this);
+        final CharSequence[] items = {"Start radio", "Just play this"};
+        play_builder.setTitle("Start Radio?");
+        play_builder.setItems(items, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int item) {
+                //play_type = item;
+                dialog.dismiss();
+            }
+        });
+        AlertDialog play_dialog = play_builder.create();
+        play_dialog.show();
+
+    }
+
+    public void dialogChoosePlayer() {
+
+    }
+
+
     public void sendToSqueezebox(int chosen_player_index) {
         Player player = players.get(chosen_player_index);
         SendToSqueezeboxTask task = new SendToSqueezeboxTask();
