@@ -4,10 +4,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
@@ -25,78 +25,14 @@ import java.util.regex.Pattern;
 
 public class SendToActivity extends AppCompatActivity {
 
-    class Player {
-        public String name;
-        public String MACaddress;
+    private List<Player> players;
+    private String url;
+    private SharedPreferences sharedPref;
+    private int itemNo = 0;
 
-        public Player(String name, String MACaddress) {
-            this.name = name;
-            this.MACaddress = MACaddress;
-        }
-    }
-    List<Player> players;
-    String url;
-    SharedPreferences sharedPref;
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-        Intent intent = getIntent();
-        String action = intent.getAction();
-        if(action.equals("android.intent.action.SEND")) {
-            url = intent.getExtras().getString(Intent.EXTRA_TEXT);
-        } else if(action.equals("android.intent.action.VIEW")){
-            url = intent.getDataString();
-        }
-
-        GetPlayersTask playersTask = new GetPlayersTask();
-        playersTask.execute();
-        try {
-            players = playersTask.get();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        if(players.size() == 0) {
-            Toast toast = Toast.makeText(getApplicationContext(), "No Players Found!", Toast.LENGTH_LONG);
-            toast.show();
-            finish();
-            return;
-        } else if(players.size() == 1) {
-            sendToSqueezebox(0);
-        } else {
-            AlertDialog.Builder builder = new AlertDialog.Builder(SendToActivity.this);
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
-            for(Player player: players){
-                adapter.add(player.name);
-            }
-            builder.setTitle("Which Squeezebox?");
-            builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int item) {
-                    sendToSqueezebox(item);
-                }
-            });
-            AlertDialog dialog = builder.create();
-            dialog.show();
-        }
-
-        //finish();
-    }
-
-    public void sendToSqueezebox(int chosen_player_index) {
-        Player player = players.get(chosen_player_index);
-        SendToSqueezeboxTask task = new SendToSqueezeboxTask();
-        task.execute(player.MACaddress, convertURL(url));
-
-        Toast toast = Toast.makeText(getApplicationContext(), "Sent  to " + player.name, Toast.LENGTH_LONG);
-        toast.show();
-
-    }
-
-    public static String convertURL(String url) {
+    private static String convertURL(String url) {
         Pattern googlemusic_pattern = Pattern.compile(
-                "https://play.google.com/music(/r)?/m/(A|B|T|R)([^\\?]+)\\??(.*)",
+                "https://play.google.com/music(/r)?/m/[ABTR]([^\\?]+)\\??(.*)",
                 Pattern.CASE_INSENSITIVE);
         Matcher googlemusic_matcher = googlemusic_pattern.matcher(url);
 
@@ -126,9 +62,103 @@ public class SendToActivity extends AppCompatActivity {
         return url;
     }
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        Intent intent = getIntent();
+        String action = intent.getAction();
+        assert action != null;
+        if(action.equals("android.intent.action.SEND")) {
+            assert intent.getExtras() != null;
+            url = intent.getExtras().getString(Intent.EXTRA_TEXT);
+        } else if(action.equals("android.intent.action.VIEW")){
+            url = intent.getDataString();
+        }
+
+        GetPlayersTask playersTask = new GetPlayersTask();
+        playersTask.execute();
+        try {
+            players = playersTask.get();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+        if(players.size() == 0) {
+            Toast toast = Toast.makeText(getApplicationContext(), "No Players Found!", Toast.LENGTH_LONG);
+            toast.show();
+            finish();
+        } else {
+            AlertDialog.Builder builder = new AlertDialog.Builder(SendToActivity.this);
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_single_choice);
+            for(Player player: players){
+                adapter.add(player.name);
+            }
+
+            builder.setTitle("Which Squeezebox?");
+            builder.setSingleChoiceItems(adapter, 0, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int item) {
+                    itemNo = item;
+                }
+            });
+            builder.setPositiveButton("Play", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    sendToSqueezebox(itemNo, "play");
+                }
+            });
+            builder.setNegativeButton("Add", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    sendToSqueezebox(itemNo, "add");
+                }
+            });
+            builder.setNeutralButton("Play Next", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    sendToSqueezebox(itemNo, "insert");
+                }
+            });
+            builder.setCancelable(true);
+            builder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                @Override
+                public void onCancel(DialogInterface dialogInterface) {
+                    finish();
+                }
+            });
+            AlertDialog dialog = builder.create();
+            dialog.show();
+        }
+
+        //finish();
+    }
+
+    private void sendToSqueezebox(int chosen_player_index, String mode) {
+        Player player = players.get(chosen_player_index);
+        SendToSqueezeboxTask task = new SendToSqueezeboxTask();
+        task.execute(player.MACaddress, convertURL(url), mode);
+
+        Toast toast = Toast.makeText(getApplicationContext(), "Sent  to " + player.name, Toast.LENGTH_LONG);
+        toast.show();
+
+    }
+
+    class Player {
+        final String name;
+        final String MACaddress;
+
+        Player(String name, String MACaddress) {
+            this.name = name;
+            this.MACaddress = MACaddress;
+        }
+    }
+
     private class GetPlayersTask extends AsyncTask<Void, Void, List<Player>> {
         protected List<Player> doInBackground(Void... args) {
-            List<Player> players = new ArrayList<Player>();
+            List<Player> players = new ArrayList<>();
             try {
                 final String address = sharedPref.getString("server_address", "");
                 final String port = sharedPref.getString("server_port", "");
@@ -142,8 +172,6 @@ public class SendToActivity extends AppCompatActivity {
                 if(response.substring(0,13).equals("player count ")) {
                     String doo = response.substring(13);
                     playerCount = Integer.parseInt(doo);
-                } else {
-                    //throw "Error contacting server";
                 }
                 for(int i=0; i<playerCount; i++) {
                     String playerMAC = "";
@@ -178,11 +206,12 @@ public class SendToActivity extends AppCompatActivity {
             try {
                 final String playerMAC = args[0];
                 final String mediaURL = args[1];
+                final String mode = args[2];
                 final String address = sharedPref.getString("server_address", "");
                 final String port = sharedPref.getString("server_port", "");
                 Socket socket = new Socket(address, Integer.parseInt(port));
                 PrintWriter output = new PrintWriter(socket.getOutputStream(), true);
-                output.println(playerMAC + " playlist play " + mediaURL);
+                output.println(playerMAC + " playlist " + mode + " " + mediaURL);
                 //output.flush();
                 output.close();
             } catch (UnknownHostException e) {
