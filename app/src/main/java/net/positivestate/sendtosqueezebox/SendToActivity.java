@@ -36,6 +36,7 @@ public class SendToActivity extends AppCompatActivity {
     }
     List<Player> players;
     String url;
+    Boolean play_radio;
     SharedPreferences sharedPref;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +50,8 @@ public class SendToActivity extends AppCompatActivity {
         } else if(action.equals("android.intent.action.VIEW")){
             url = intent.getDataString();
         }
+
+        play_radio = sharedPref.getBoolean("default_play_radio", false);
 
         GetPlayersTask playersTask = new GetPlayersTask();
         playersTask.execute();
@@ -114,7 +117,7 @@ public class SendToActivity extends AppCompatActivity {
 
     }
 
-    public static String convertURL(String url) {
+    public String convertURL(String url) {
         Pattern googlemusic_pattern = Pattern.compile(
                 "https://play.google.com/music(/r)?/m/(A|B|T|R)([^\\?]+)\\??(.*)",
                 Pattern.CASE_INSENSITIVE);
@@ -126,19 +129,24 @@ public class SendToActivity extends AppCompatActivity {
         Matcher youtube_matcher = youtube_pattern.matcher(url);
 
         if (googlemusic_matcher.matches()) {
+            String gm_url_start = "googlemusic";
+            if(play_radio) {
+                gm_url_start = "googlemusicradio";
+            }
+
             switch (googlemusic_matcher.group(2)) {
                 case "A":  // artist
-                    return "googlemusic:artist:A" + googlemusic_matcher.group(3);
+                    return gm_url_start + ":artist:A" + googlemusic_matcher.group(3);
                 case "B":  // radio or album
                     if (googlemusic_matcher.group(1) != null) { //radio
-                        return "googlemusic:station:B" + googlemusic_matcher.group(3);
+                        return gm_url_start + ":station:B" + googlemusic_matcher.group(3);
                     } else {
-                        return "googlemusic:album:B" + googlemusic_matcher.group(3);
+                        return gm_url_start + ":album:B" + googlemusic_matcher.group(3);
                     }
                 case "T":  // track
-                    return "googlemusic:track:T" + googlemusic_matcher.group(3);
+                    return gm_url_start + ":track:T" + googlemusic_matcher.group(3);
                 case "R":  // album
-                    return "googlemusic:album:R" + googlemusic_matcher.group(3);
+                    return gm_url_start + ":album:R" + googlemusic_matcher.group(3);
             }
         } else if (youtube_matcher.matches()) {
             return "youtube://" + youtube_matcher.group(1);
