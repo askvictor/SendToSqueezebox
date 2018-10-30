@@ -1,6 +1,6 @@
 # SendToSqueezebox
 
-This is an Android app which makes it easier to send URLs to play on your Squeezebox. At this point it only handles Youtube URLs, but I plan to support arbitrary URLS eventually. For Youtube to work, it requires the Youtube plugin to be installed on your Squeezebox server, and is constrained by the same limitations.
+This is an Android app which makes it easier to send URLs to play on your Squeezebox. Handles Youtube and Google Play music, as well as arbitrary URLs that are sent directly to the squeezebox. For Youtube to work, it requires the Youtube plugininstalled on your Squeezebox server, and is constrained by the same limitations.
 
 Running the app itself only brings up the settings (server address, port). 
 
